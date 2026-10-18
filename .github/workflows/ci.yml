@@ -71,10 +71,21 @@ jobs:
       - run: npm ci
       - name: Start the stack
         run: docker compose up -d --build --wait --wait-timeout 240
-      - run: npm run test:e2e
+      - name: Run end-to-end tests
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee e2e.out
       - name: Service logs
         if: failure()
-        run: docker compose logs --no-color --tail 200
+        run: |
+          docker compose logs --no-color --tail 200
+          # Surface the failing assertions and service errors as annotations.
+          grep -E "✖|Error|expected|actual|did not settle" e2e.out | head -15 | while IFS= read -r line; do
+            echo "::error title=e2e::$line"
+          done
+          docker compose logs --no-color | grep -E '"level":(40|50)' | tail -15 | while IFS= read -r line; do
+            echo "::warning title=service log::$line"
+          done
       - name: Stop the stack
         if: always()
         run: docker compose down -v
