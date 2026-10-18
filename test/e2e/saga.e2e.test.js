@@ -64,7 +64,7 @@ describe('end to end over Kafka', () => {
   it('cancels when stock is short', async () => {
     const placed = await call('/orders', {
       method: 'POST',
-      body: JSON.stringify({ customerId: 'e2e-short', items: [{ sku: 'HD-004', quantity: 10000 }], paymentToken: 'tok_visa' }),
+      body: JSON.stringify({ customerId: 'e2e-short', items: [{ sku: 'HD-004', quantity: 999 }], paymentToken: 'tok_visa' }),
     });
     const order = await settled(placed.body.id);
     assert.equal(order.status, 'CANCELLED');
